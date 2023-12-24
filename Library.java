@@ -58,6 +58,10 @@ class Library {
                 int availableCopies = Integer.parseInt(data[3]);
                 // uploads to hashmap
                 books.put(bookID, new Book(bookID, title, author, availableCopies));
+
+                for (int i = 4; i < data.length; i++) {
+                    books.get(bookID).waitList.add(Integer.parseInt(data[i]));
+                }
             }
         } catch (FileNotFoundException e) { // if the file doesn't exist.... nice try
             System.out.println(".csv file not found!");
@@ -84,6 +88,9 @@ class Library {
 
                 for (int i = 0; i < 2; i++) {
                     newMember.borrowedBookID[i] = Integer.parseInt(data[i + 3]);
+                    if (Integer.parseInt(data[i + 3]) != -1) {
+                        members.get(cardID).borrowedBooks++;
+                    }
                 }
                 // System.out.println(Arrays.toString(newMember.borrowedBookID));
             }
@@ -98,6 +105,10 @@ class Library {
             // iterates through all books in hashmap, writes out in csv
             for (Book book : books.values()) {
                 bw.write(book.bookID + "^" + book.title + "^" + book.author + "^" + book.availableCopies);
+                while (!book.waitList.isEmpty()) {
+                    tempID = book.waitList.poll();
+                    bw.write("^" + tempID);
+                }
                 bw.newLine();
             }
         } catch (IOException e) {
@@ -245,7 +256,7 @@ class Library {
             case "add" -> {
                 System.out.println("Please enter the ID of the member:");
                 tempID = Integer.parseInt(scanner.nextLine());
-                while (!members.containsKey(tempID)) {
+                while (members.containsKey(tempID)) {
                     System.out.println("Please give a valid member ID: ");
                     tempID = Integer.parseInt(scanner.nextLine());
                 }
@@ -274,6 +285,7 @@ class Library {
     public void loanBook() {
         System.out.println("Please enter the ID of the member:"); // getting member
         tempID = Integer.parseInt(scanner.nextLine());
+
         while (!members.containsKey(tempID)) {
             System.out.println("Please give a valid member ID: ");
             tempID = Integer.parseInt(scanner.nextLine());
@@ -288,9 +300,16 @@ class Library {
         }
         Book tempBook = books.get(tempID);
 
-        if (tempBook.checkAvailability()) { // book loaning process
+
+        if (tempMember.borrowedBooks == 2) {
+        System.out.println("The member cannot loan any more books. ");
+        System.out.println("Would you like to be added to the waitlist? (yes/no)");
+        input = scanner.nextLine(); // input to determine if user is added to waitlist
+        if (input.equals("yes")) {
+            tempBook.addWaitList(tempMember.cardID);
+        }
+        } else if (tempBook.checkAvailability()) { // book loaning process
             tempMember.loanBook(tempBook);
-            tempBook.availableCopies--;
             System.out.println("Book loaned.");
         } else {
             System.out.println("Book is currently being loaned. Would you like to be added to the waitlist? (yes/no)");
@@ -324,7 +343,7 @@ class Library {
                     tempRetBook.availableCopies++;
                 } else {
                     CommunityMember nextMem = members.get(nextMemID);
-                    if (nextMem.borrowedBooks == 5) {
+                    if (nextMem.borrowedBooks == 2) {
                         tempRetBook.addWaitList(nextMemID);
                         tempRetBook.availableCopies++;
                     } else {
@@ -362,7 +381,6 @@ class Library {
         if (!members.containsKey(placeUserID)) {
             System.out.println("Member not found.");
         } else {
-            CommunityMember placeUser = members.get(placeUserID);
             System.out.println("Please enter the ID of the book");
             int tempPlaceID = Integer.parseInt(scanner.nextLine());
             if (!books.containsKey(tempPlaceID)) {
@@ -382,7 +400,6 @@ class Library {
         int bookId = Integer.parseInt(scanner.nextLine());
 
         if (members.containsKey(memberId) && books.containsKey(bookId)) {
-            CommunityMember member = members.get(memberId);
             Book book = books.get(bookId);
 
             if (book.waitList.contains(memberId)) {

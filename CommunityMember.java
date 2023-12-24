@@ -17,7 +17,6 @@ class CommunityMember {
 
     // loan book
     public void loanBook(Book book) { // assume that book exists
-        // DEBUG, MAKE SURE BOOK EXISTS, MAKE SURE BORROWED BOOK LIMIT IS REACHED
         borrowedBookID[borrowedBooks] = book.bookID;
         borrowedBooks++;
         book.availableCopies--;
@@ -25,7 +24,6 @@ class CommunityMember {
 
     // return book
     public void returnBook(int index) { // assume that book exists
-        // DEBUG, MAKE SURE THE COUNTER IS MORE THAN 0
         for (int i = index; i < borrowedBooks - 1; i++) { // shifts everything to the right of index left
             borrowedBookID[i] = borrowedBookID[i + 1];
         }
